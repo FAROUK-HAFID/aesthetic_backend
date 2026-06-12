@@ -7,65 +7,122 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return Category::with('children')->get();
+        try {
+            $categories = Category::with('children')->get();
+            return response()->json([
+                'status'     => 1,
+                'message'    => 'Categories retrieved successfully',
+                'categories' => $categories
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 0,
+                'error'  => $th->getMessage()
+            ], 500);
+        }
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|max:150',
-            'description' => 'nullable',
-            'parent_id' => 'nullable|exists:categories,id'
-        ]);
+        try {
+            $validated = $request->validate([
+                'name'        => 'required|max:150',
+                'description' => 'nullable',
+                'parent_id'   => 'nullable|exists:categories,id'
+            ]);
 
-        $category = Category::create($validated);
+            $category = Category::create($validated);
 
-        return response()->json($category, 201);
+            if (!$category) {
+                return response()->json([
+                    'status'  => 0,
+                    'message' => 'Failed to create category'
+                ], 400);
+            }
+
+            return response()->json([
+                'status'   => 1,
+                'message'  => 'Category created successfully',
+                'category' => $category
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 0,
+                'error'  => $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Category $category)
     {
-        return $category->load('children');
+        try {
+            return response()->json([
+                'status'   => 1,
+                'message'  => 'Category retrieved successfully',
+                'category' => $category->load('children')
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 0,
+                'error'  => $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => 'required|max:150',
-            'description' => 'nullable',
-            'parent_id' => 'nullable|exists:categories,id'
-        ]);
+        try {
+            $validated = $request->validate([
+                'name'        => 'required|max:150',
+                'description' => 'nullable',
+                'parent_id'   => 'nullable|exists:categories,id'
+            ]);
 
-        $category->update($validated);
+            $updated = $category->update($validated);
 
-        return response()->json($category);
+            if (!$updated) {
+                return response()->json([
+                    'status'  => 0,
+                    'message' => 'Failed to update category'
+                ], 400);
+            }
+
+            return response()->json([
+                'status'   => 1,
+                'message'  => 'Category updated successfully',
+                'category' => $category
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 0,
+                'error'  => $th->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Category $category)
     {
-        $category->delete();
+        try {
+            $deleted = $category->delete();
 
-        return response()->json([
-            'status'  => 1,
-            'message' => 'Category deleted successfully'
-        ]);
+            if (!$deleted) {
+                return response()->json([
+                    'status'  => 0,
+                    'message' => 'Failed to delete category'
+                ], 400);
+            }
+
+            return response()->json([
+                'status'  => 1,
+                'message' => 'Category deleted successfully'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 0,
+                'error'  => $th->getMessage()
+            ], 500);
+        }
     }
 }
